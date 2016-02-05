@@ -39,12 +39,12 @@ def cmd_roll(cmd, user):
 
 @client.event
 @asyncio.coroutine
-def cmd_choose(choices):
+def cmd_choose(choices, adj):
     try:
         choices = [c.strip() for c in choices.split(',')]
         res = choice(choices)
         print("I choose {}".format(res))
-        return res.capitalize()
+        return "{} is {}!".format(res, adj).capitalize()
     except:
         return "I can't decide!"
 
@@ -57,6 +57,17 @@ def cmd_accept(inv):
     except:
         return "It didn't work..."
 
+@client.event
+@asyncio.coroutine
+def cmd_pickfromrole(srv, role):
+    try:
+        usrs = [ u for u in srv.members if role in [r.name.lower() for r in u.roles] ]
+        res = choice(usrs)
+        print("I choose {0.name}!".format(res))
+        return "I choose {0.mention}!".format(res)
+    except:
+        return "That's not a real role!"
+    
 @client.event
 @asyncio.coroutine
 def on_message(message):
@@ -76,12 +87,19 @@ def on_message(message):
             print("That's a choose command!")
             yield from client.send_message(message.channel, "I have to pick, huh?")
             tmp = yield from client.send_message(message.channel, "Hmm...")
-            res = yield from cmd_choose(parsed_cmd['list'])
-            yield from client.edit_message(tmp, "{} is {}!".format(res, parsed_cmd['adj']))
+            res = yield from cmd_choose(parsed_cmd['list'], parsed_cmd['adj'])
+            yield from client.edit_message(tmp, res)
         parsed_cmd = parse("accept {inv}", cmd)
         if parsed_cmd:
             print("I'm being given an invite!")
             res = yield from cmd_accept(parsed_cmd['inv'])
             yield from client.send_message(message.author, res)
+        parsed_cmd = parse("pick one of the {role}",cmd)
+        if parsed_cmd:
+            print("That's a pickfromrole command!")
+            yield from client.send_message(message.channel, "I have to pick, huh?")
+            tmp = yield from client.send_message(message.channel, "Hmm...")
+            res = yield from cmd_pickfromrole(message.server, parsed_cmd['role'])
+            yield from client.edit_message(tmp, res)
 
 client.run('jakebhumphrey@gmail.com', 'nepnepnishiteageru')

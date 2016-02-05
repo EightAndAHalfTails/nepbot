@@ -1,6 +1,7 @@
 import discord
 import asyncio
-import random
+from parse import parse
+from random import randint
 
 client = discord.Client()
 
@@ -12,18 +13,29 @@ def on_ready():
     print(client.user.id)
     print('------')
 
+def roll(num, sides, mod=0):
+    print("Rolling {}d{}+{}".format(num, sides, mod))
+    res =[ randint(1,sides) for i in range(num) ]
+    if mod:
+        res += [mod]
+    return res
+    
 @client.event
 @asyncio.coroutine
-def roll(cmd, user):
-    try:
-        num = int(cmd.split('d')[0])
-        sides = int(cmd.split('d')[1])
-        print("Rolling {} {}-sided dice...".format(num,sides))
-        results = [ random.randint(1,sides) for i in range(num) ]
-        response = "_Rolling for {}_ `({})` ```{} ({})```".format(user.mention, cmd, sum(results), " + ".join(map(str, results)))
-        return response
-    except:
-        return "Roll Failed"
+def cmd_roll(cmd, user):
+    cmd = cmd.replace(" ","")
+    r = parse("{num:d}d{sides:d}",cmd)
+    if r:
+        results = roll(r['num'], r['sides'])
+    else:
+        r = parse("{num:d}d{sides:d}{mod:d}",cmd)
+        if r:
+            print(r)
+            results = roll(r['num'], r['sides'], r['mod'])
+        else:
+            return "Please give me a command in in NdN+N format!"
+    response = "_Rolling for {}_ `({})` ```{} ({})```".format(user.mention, cmd, sum(results), " + ".join(map(str, results)))
+    return response
 
 @client.event
 @asyncio.coroutine
@@ -33,8 +45,11 @@ def on_message(message):
         print("That's me!")
         cmd = message.content.replace("<@{}>".format(client.user.id),"").strip()
         print("I'm being told to '{}'".format(cmd))
-        if cmd.startswith("roll "):
-            res = yield from roll(cmd[5:], message.author)
-            yield from client.send_message(message.channel, res)
+        rollcmd = parse("roll {cmd}", cmd)
+        if rollcmd:
+            print("That's a roll command!")
+            tmp = yield from client.send_message(message.channel, "Rolling...")
+            res = yield from cmd_roll(rollcmd['cmd'], message.author)
+            yield from client.edit_message(tmp, res)
 
 client.run('jakebhumphrey@gmail.com', 'nepnepnishiteageru')

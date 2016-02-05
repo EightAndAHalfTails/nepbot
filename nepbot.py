@@ -1,7 +1,7 @@
 import discord
 import asyncio
 from parse import parse
-from random import randint
+from random import randint, choice
 
 client = discord.Client()
 
@@ -39,11 +39,22 @@ def cmd_roll(cmd, user):
 
 @client.event
 @asyncio.coroutine
+def cmd_choose(choices):
+    try:
+        choices = [c.strip() for c in choices.split(',')]
+        res = choice(choices)
+        print("I choose {}".format(res))
+        return res
+    except:
+        return "I can't decide!"
+    
+@client.event
+@asyncio.coroutine
 def on_message(message):
-    print("Message recieved: {}".format(message.content))
+    #print("Message recieved: {}".format(message.content))
     if client.user in message.mentions:
         print("That's me!")
-        cmd = message.content.replace("<@{}>".format(client.user.id),"").strip()
+        cmd = message.content.replace("<@{}>".format(client.user.id),"").strip().lower()
         print("I'm being told to '{}'".format(cmd))
         rollcmd = parse("roll {cmd}", cmd)
         if rollcmd:
@@ -51,5 +62,11 @@ def on_message(message):
             tmp = yield from client.send_message(message.channel, "Rolling...")
             res = yield from cmd_roll(rollcmd['cmd'], message.author)
             yield from client.edit_message(tmp, res)
+        choosecmd = parse("which is {adj}: {list}?", cmd)
+        if choosecmd:
+            yield from client.send_message(message.channel, "I have to pick, huh?")
+            tmp = yield from client.send_message(message.channel, "Hmm...")
+            res = yield from cmd_choose(choosecmd['list'])
+            yield from client.edit_message(tmp, "{} is {}!".format(res, choosecmd['adj']))
 
 client.run('jakebhumphrey@gmail.com', 'nepnepnishiteageru')

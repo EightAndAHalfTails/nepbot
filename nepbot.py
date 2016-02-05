@@ -44,10 +44,19 @@ def cmd_choose(choices):
         choices = [c.strip() for c in choices.split(',')]
         res = choice(choices)
         print("I choose {}".format(res))
-        return res
+        return res.capitalize()
     except:
         return "I can't decide!"
-    
+
+@client.event
+@asyncio.coroutine
+def cmd_accept(inv):
+    try:
+        yield from client.accept_invite(inv)
+        return "Thanks!"
+    except:
+        return "It didn't work..."
+
 @client.event
 @asyncio.coroutine
 def on_message(message):
@@ -56,17 +65,23 @@ def on_message(message):
         print("That's me!")
         cmd = message.content.replace("<@{}>".format(client.user.id),"").strip().lower()
         print("I'm being told to '{}'".format(cmd))
-        rollcmd = parse("roll {cmd}", cmd)
-        if rollcmd:
+        parsed_cmd = parse("roll {cmd}", cmd)
+        if parsed_cmd:
             print("That's a roll command!")
             tmp = yield from client.send_message(message.channel, "Rolling...")
-            res = yield from cmd_roll(rollcmd['cmd'], message.author)
+            res = yield from cmd_roll(parsed_cmd['cmd'], message.author)
             yield from client.edit_message(tmp, res)
-        choosecmd = parse("which is {adj}: {list}?", cmd)
-        if choosecmd:
+        parsed_cmd = parse("which is {adj}:{list}?", cmd)
+        if parsed_cmd:
+            print("That's a choose command!")
             yield from client.send_message(message.channel, "I have to pick, huh?")
             tmp = yield from client.send_message(message.channel, "Hmm...")
-            res = yield from cmd_choose(choosecmd['list'])
-            yield from client.edit_message(tmp, "{} is {}!".format(res, choosecmd['adj']))
+            res = yield from cmd_choose(parsed_cmd['list'])
+            yield from client.edit_message(tmp, "{} is {}!".format(res, parsed_cmd['adj']))
+        parsed_cmd = parse("accept {inv}", cmd)
+        if parsed_cmd:
+            print("I'm being given an invite!")
+            res = yield from cmd_accept(parsed_cmd['inv'])
+            yield from client.send_message(message.author, res)
 
 client.run('jakebhumphrey@gmail.com', 'nepnepnishiteageru')

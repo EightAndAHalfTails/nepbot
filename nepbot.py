@@ -3,8 +3,9 @@ from discord.ext import commands
 import asyncio
 from parse import parse
 from random import randint, choice
+from datetime import date
 
-from credentials import email, passw
+from credentials import email, passw, irclogdir
 
 desc = "The Protagonist of all Discord bots!"
 
@@ -30,12 +31,13 @@ def _roll(num, sides, mod=0):
 def roll(*cmd : str):
     cmd = "".join(cmd)
     r = parse("{num:d}d{sides:d}",cmd)
+    print(r)
     if r:
         results = _roll(r['num'], r['sides'])
     else:
         r = parse("{num:d}d{sides:d}{mod:d}",cmd)
+        print(r)
         if r:
-            print(r)
             results = _roll(r['num'], r['sides'], r['mod'])
         else:
             yield from nepbot.reply("Please give me a command in in NdN+N format!")
@@ -189,6 +191,16 @@ def capture(ctx):
     success = res == 100 or res <= cr
     result  = "succeeded!" if success else "failed..."
     yield from nepbot.reply("You {} `({})`".format(result, res))
-    return success
     
+@nepbot.command(help="Offers a glimpse into the Hyperdimension...")
+@asyncio.coroutine
+def scry():
+    try:
+        today = date.today()
+        log = "{}/freenode_##compsoc-uk-anime_{}{:02}{:02}.log".format(irclogdir, today.year, today.month, today.day)
+        with open(log) as f:
+            yield from nepbot.say("`{}`".format(f.readlines()[-1]))
+    except:
+        yield from nepbot.say("Outlook unclear. Try again later.")
+
 nepbot.run(email, passw)

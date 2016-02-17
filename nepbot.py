@@ -4,7 +4,8 @@ import asyncio
 from parse import parse
 from random import randint, choice
 from datetime import date
-
+import requests
+from lxml import html
 from credentials import email, passw, irclogdir
 
 desc = "The Protagonist of all Discord bots!"
@@ -202,5 +203,22 @@ def scry():
             yield from nepbot.say("`{}`".format(f.readlines()[-1]))
     except:
         yield from nepbot.say("Outlook unclear. Try again later.")
+
+@nepbot.command(help="Posts an xkcd comic and hovertext")
+@asyncio.coroutine
+def xkcd(number:str=""):
+    try:
+        page = requests.get('http://xkcd.com/{}'.format(number))
+        tree = html.fromstring(page.content)
+
+        comic = tree.xpath('//div[@id="comic"]/img/attribute::src')[0]
+        hover = tree.xpath('//div[@id="comic"]/img/attribute::title')[0]
+        comic = requests.get("http:{}".format(comic)).content
+
+        yield from nepbot.upload(comic, "xkcd-{}.png".format(number))
+        yield from nepbot.say("_{}_".format(hover))
+    except Exception as e:
+        print(e)
+        yield from nepbot.say("I failed...")
 
 nepbot.run(email, passw)

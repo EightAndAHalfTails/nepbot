@@ -196,7 +196,7 @@ async def capture(ctx):
 async def scry():
     try:
         today = date.today()
-        log = "{}/freenode_##compsoc-uk-anime_{}{:02}{:02}.log".format(irclogdir, today.year, today.month, today.day)
+        log = "{}/{}-{:02}-{:02}.log".format(irclogdir, today.year, today.month, today.day)
         with open(log) as f:
             await nepbot.say("`{}`".format(f.readlines()[-1]))
     except:

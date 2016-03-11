@@ -189,14 +189,14 @@ async def capture(ctx):
         if check:
             await nepbot.reply("Shook {}...".format(shakes))
         else:
-            await nepbot.reply("{.capitalize()}! The Pokemon broke free...".format(_getExplicitive()))
+            await nepbot.reply("{}! The Pokemon broke free...".format(_getExplicitive().capitalize()))
             return
     nepbot.type()
     await asyncio.sleep(1)
     if success:
         await nepbot.reply("Gotcha! The Wild Pokemon was caught! `({})`".format(res))
     else:
-        await nepbot.reply("{.capitalize()}! The Pokemon broke free...".format(_getExplicitive()))
+        await nepbot.reply("{}! The Pokemon broke free...".format(_getExplicitive().capitalize()))
         
 @nepbot.command(help="Offers a glimpse into the Hyperdimension...")
 async def scry():

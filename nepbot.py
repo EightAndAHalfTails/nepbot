@@ -12,7 +12,7 @@ from tempfile import TemporaryFile
 from time import sleep
 import os
 import io
-from dice import roll, parse
+from dice import roll as diceroll, parse
 
 desc = "The Protagonist of all Discord bots!"
 
@@ -27,7 +27,10 @@ async def on_ready():
 
 def _getError():
     return choice([ "What?", "Wait, what?", "I don't get it...", "Huh?", "I don't understand...", "Could you repeat that?", "What's that supposed to mean?", "That can't be right...", "Uhhh, what?", "Did you mess up or something?", "Sorry, what?" ])
-    
+
+def _getExplicitive():
+    return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way" ])
+
 @nepbot.command(description="Rolls dice given in NdN+N format.", brief="Rolls dice.")
 async def roll(*cmd : str):
     cmd = "".join(cmd)
@@ -178,11 +181,23 @@ async def capture(ctx):
             await nepbot.reply(_getError())
 
     await nepbot.reply("The Capture Rate is `{}`!".format(cr))
-    res = dice.roll(100).result
+    res = diceroll(100).result
     success = res == 100 or res <= cr
-    result  = "succeeded!" if success else "failed..."
-    await nepbot.reply("You {} `({})`".format(result, res))
-    
+    for shakes, check in [("once", res-cr < 30), ("twice", res-cr < 20), ("thrice", res-cr < 10)]:
+        nepbot.type()
+        await asyncio.sleep(1)
+        if check:
+            await nepbot.reply("Shook {}...".format(shakes))
+        else:
+            await nepbot.reply("{.capitalize()}! The Pokemon broke free...".format(_getExplicitive()))
+            return
+    nepbot.type()
+    await asyncio.sleep(1)
+    if success:
+        await nepbot.reply("Gotcha! The Wild Pokemon was caught! `({})`".format(res))
+    else:
+        await nepbot.reply("{.capitalize()}! The Pokemon broke free...".format(_getExplicitive()))
+        
 @nepbot.command(help="Offers a glimpse into the Hyperdimension...")
 async def scry():
     try:

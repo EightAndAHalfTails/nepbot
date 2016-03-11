@@ -12,6 +12,7 @@ from tempfile import TemporaryFile
 from time import sleep
 import os
 import io
+from dice import roll, parse
 
 desc = "The Protagonist of all Discord bots!"
 
@@ -24,30 +25,20 @@ async def on_ready():
     print(nepbot.user.id)
     print('------')
 
-def _roll(num, sides, mod=0):
-    print("Rolling {}d{}+{}".format(num, sides, mod))
-    res =[ randint(1,sides) for i in range(num) ]
-    if mod:
-        res += [mod]
-    return res
+def _getError():
+    return choice([ "What?", "Wait, what?", "I don't get it...", "Huh?", "I don't understand...", "Could you repeat that?", "What's that supposed to mean?", "That can't be right...", "Uhhh, what?", "Did you mess up or something?", "Sorry, what?" ])
     
 @nepbot.command(description="Rolls dice given in NdN+N format.", brief="Rolls dice.")
 async def roll(*cmd : str):
     cmd = "".join(cmd)
-    r = parse("{num:d}d{sides:d}",cmd)
-    print(r)
-    if r:
-        results = _roll(r['num'], r['sides'])
-    else:
-        r = parse("{num:d}d{sides:d}{mod:d}",cmd)
-        print(r)
-        if r:
-            results = _roll(r['num'], r['sides'], r['mod'])
+    try:
+        res = parse(cmd)
+        await nepbot.reply("`({})` ```{} ({})```".format(cmd, res.result, res.rollstr))
+    except Exception as e:
+        if str(e) is not "":
+            await nepbot.reply(str(e))
         else:
-            await nepbot.reply("Please give me a command in in NdN+N format!")
-            return
-    await nepbot.reply("`({})` ```{} ({})```".format(cmd, sum(results), " + ".join(map(str, results))))
-    
+            await nepbot.reply(_getError().lower())
 
 @nepbot.command(aliases=["pick"], description="Picks the <adj> out of [choices] (comma-separated)", brief="Let the hand of Nep decide...")
 async def choose(adj:str, *choices:str):
@@ -92,7 +83,7 @@ async def capture(ctx):
             cr += int(msg.content)
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("What is the Pokemon's level?")
@@ -101,7 +92,7 @@ async def capture(ctx):
             cr -= 2*int(msg.content)
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("""Pick one of the following:```
@@ -115,7 +106,7 @@ async def capture(ctx):
             cr -= [30, 15, 0, -15, -30][int(msg.content)-1]
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("How many evolutions does the Pokemon have remaining?")
@@ -124,7 +115,7 @@ async def capture(ctx):
             cr += [-10, 0, 10][int(msg.content)]
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("Is the Pokemon Shiny?")
@@ -135,7 +126,7 @@ async def capture(ctx):
         elif msg.content.lower() in ['n', "no"]:
             break
         else:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
             
     while(True):
         await nepbot.reply("Is the Pokemon Legendary?")
@@ -146,7 +137,7 @@ async def capture(ctx):
         elif msg.content.lower() in ['n', "no"]:
             break
         else:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("How many Persistant Status Afflictions (including Stuck) does the Pokemon have?")
@@ -155,7 +146,7 @@ async def capture(ctx):
             cr+= 10* int(msg.content)
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
         
     while(True):
         await nepbot.reply("How many Injuries or Volatile Status Afflictions (including Trapped) does the Pokemon have?")
@@ -164,7 +155,7 @@ async def capture(ctx):
             cr+= 5* int(msg.content)
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("Did you crit the Accuracy Check?")
@@ -175,7 +166,7 @@ async def capture(ctx):
         elif msg.content.lower() in ['n', "no"]:
             break
         else:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     while(True):
         await nepbot.reply("Enter any other Bonuses as a positive number")
@@ -184,10 +175,10 @@ async def capture(ctx):
             cr += int(msg.content)
             break
         except:
-            await nepbot.reply("Sorry, what?")
+            await nepbot.reply(_getError())
 
     await nepbot.reply("The Capture Rate is `{}`!".format(cr))
-    res = sum(_roll(1, 100))
+    res = dice.roll(100).result
     success = res == 100 or res <= cr
     result  = "succeeded!" if success else "failed..."
     await nepbot.reply("You {} `({})`".format(result, res))

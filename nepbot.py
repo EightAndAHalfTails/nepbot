@@ -75,115 +75,16 @@ async def delegate(ctx, *role:str):
     except:
         await nepbot.say("That's not a real role!")
 
-@nepbot.command(pass_context=True, help="Try to capture a Pokemon in PTU")
-async def capture(ctx):
-    message = ctx.message
-    cr = 100
-    while(True):
-        await nepbot.reply("What is your level?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr += int(msg.content)
-            break
-        except:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("What is the Pokemon's level?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr -= 2*int(msg.content)
-            break
-        except:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("""Pick one of the following:```
-1: The Pokemon is at more than 75% Hit Points.
-2: The Pokemon is at 75% Hit Points or lower.
-3: The Pokemon is at 50% Hit Points or lower.
-4: The Pokemon is at 25% Hit Points or lower.
-5: The Pokemon is at exactly 1 Hit Point.```""")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr -= [30, 15, 0, -15, -30][int(msg.content)-1]
-            break
-        except:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("How many evolutions does the Pokemon have remaining?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr += [-10, 0, 10][int(msg.content)]
-            break
-        except:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("Is the Pokemon Shiny?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        if msg.content.lower() in ['y', "yes"]:
-            cr -= 10
-            break
-        elif msg.content.lower() in ['n', "no"]:
-            break
-        else:
-            await nepbot.reply(_getError())
-            
-    while(True):
-        await nepbot.reply("Is the Pokemon Legendary?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        if msg.content.lower() in ['y', "yes"]:
-            cr -= 30
-            break
-        elif msg.content.lower() in ['n', "no"]:
-            break
-        else:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("How many Persistant Status Afflictions (including Stuck) does the Pokemon have?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr+= 10* int(msg.content)
-            break
-        except:
-            await nepbot.reply(_getError())
+last_params = {}
+async def _capt(**kwargs):
+    for key in kwargs:
+        last_params[key] = kwargs[key]
         
-    while(True):
-        await nepbot.reply("How many Injuries or Volatile Status Afflictions (including Trapped) does the Pokemon have?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr+= 5* int(msg.content)
-            break
-        except:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("Did you crit the Accuracy Check?")
-        msg = await nepbot.wait_for_message(author=message.author)
-        if msg.content.lower() in ['y', "yes"]:
-            cr += 10
-            break
-        elif msg.content.lower() in ['n', "no"]:
-            break
-        else:
-            await nepbot.reply(_getError())
-
-    while(True):
-        await nepbot.reply("Enter any other Bonuses as a positive number")
-        msg = await nepbot.wait_for_message(author=message.author)
-        try:
-            cr += int(msg.content)
-            break
-        except:
-            await nepbot.reply(_getError())
-
+    cr = 10 + sum(last_params.values())
     await nepbot.reply("The Capture Rate is `{}`!".format(cr))
-    res = diceroll(100).result
-    success = res == 100 or res <= cr
-    for shakes, check in [("once", res-cr < 30), ("twice", res-cr < 20), ("thrice", res-cr < 10)]:
+    res = diceroll(20).result
+    success = res == 20 or res >= cr
+    for shakes, check in [("once", res-cr > 3), ("twice", res-cr > 2), ("thrice", res-cr > 1)]:
         nepbot.type()
         await asyncio.sleep(1)
         if check:
@@ -197,6 +98,123 @@ async def capture(ctx):
         await nepbot.reply("Gotcha! The Wild Pokemon was caught! `({})`".format(res))
     else:
         await nepbot.reply("{}! The Pokemon broke free...".format(_getExplicitive().capitalize()))
+        
+@nepbot.command(pass_context=True, help="Try to capture a Pokemon in PTU")
+async def capture(ctx):
+    message = ctx.message
+    params = {}
+    while(True):
+        await nepbot.reply("""What Trainer Title do you have?```
+1: No Title
+2: Amateur Trainer (LV 5)
+3: Capable Trainer (LV 10)
+4: Veteran Trainer (LV 20)
+5: Elite Trainer   (LV 30)
+6: Champion        (LV 40)```""")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        try:
+            resp = int(msg.content)-1
+            assert 0<resp<7
+            params["lv"] = -resp
+            break
+        except:
+            await nepbot.reply(_getError())
+
+    while(True):
+        await nepbot.reply("What is the Pokemon's level?")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        try:
+            params["elv"] = int(msg.content)//10
+            break
+        except:
+            await nepbot.reply(_getError())
+
+    while(True):
+        await nepbot.reply("""Pick one of the following:```
+1: The Pokemon is at more than 50% Hit Points.
+2: The Pokemon is at 50% Hit Points or lower.
+3: The Pokemon is at 25% Hit Points or lower.```""")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        try:
+            res = int(msg.content)-1
+            assert res in [0,1,2]
+            params["hp"] = 2*res
+            break
+        except:
+            await nepbot.reply(_getError())
+
+    while(True):
+        await nepbot.reply("How many evolutions does the Pokemon have remaining?")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        try:
+            assert int(msg.content) in [0,1,2]
+            params["evol"] = [0,2,6][int(msg.content)]
+            break
+        except:
+            await nepbot.reply(_getError())
+
+    while(True):
+        await nepbot.reply("Does the Pokemon have 5 or more injuries?")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        if msg.content.lower() in ['y', "yes"]:
+            params["inj"] = 4
+            break
+        elif msg.content.lower() in ['n', "no"]:
+            params["inj"] = 0
+            break
+        else:
+            await nepbot.reply(_getError())
+            
+    while(True):
+        await nepbot.reply("Is the Pokemon suffering from at least one Persistant or Volatile Status Affliction?")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        if msg.content.lower() in ['y', "yes"]:
+            params["stat"] = -2
+            break
+        elif msg.content.lower() in ['n', "no"]:
+            params["stat"] = 0
+            break
+        else:
+            await nepbot.reply(_getError())
+
+    while(True):
+        await nepbot.reply("Did you crit the Accuracy Check?")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        if msg.content.lower() in ['y', "yes"]:
+            params["crit"] = -1
+            break
+        elif msg.content.lower() in ['n', "no"]:
+            params["crit"] = 0
+            break
+        else:
+            await nepbot.reply(_getError())
+
+    while(True):
+        await nepbot.reply("Enter any other Bonuses as a positive number")
+        msg = await nepbot.wait_for_message(author=message.author)
+        if msg.content.lower() in ["s", "same"]:
+            break
+        try:
+            params["other"] = -int(msg.content)
+            break
+        except:
+            await nepbot.reply(_getError())
+    await _capt(**params)
+    
         
 @nepbot.command(help="Offers a glimpse into the Hyperdimension...")
 async def scry():

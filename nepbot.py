@@ -29,7 +29,7 @@ def _getError():
     return choice([ "What?", "Wait, what?", "I don't get it...", "Huh?", "I don't understand...", "Could you repeat that?", "What's that supposed to mean?", "That can't be right...", "Uhhh, what?", "Did you mess up or something?", "Sorry, what?" ])
 
 def _getExplicitive():
-    return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way" ])
+    return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way", "balls" ])
 
 @nepbot.command(description="Rolls dice given in NdN+N format.", brief="Rolls dice.")
 async def roll(*cmd : str):
@@ -111,12 +111,12 @@ async def capture(ctx):
 4: Veteran Trainer (LV 20)
 5: Elite Trainer   (LV 30)
 6: Champion        (LV 40)```""")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         try:
             resp = int(msg.content)-1
-            assert 0<resp<7
+            assert 0<=resp<=5
             params["lv"] = -resp
             break
         except:
@@ -124,7 +124,7 @@ async def capture(ctx):
 
     while(True):
         await nepbot.reply("What is the Pokemon's level?")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         try:
@@ -138,7 +138,7 @@ async def capture(ctx):
 1: The Pokemon is at more than 50% Hit Points.
 2: The Pokemon is at 50% Hit Points or lower.
 3: The Pokemon is at 25% Hit Points or lower.```""")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         try:
@@ -151,7 +151,7 @@ async def capture(ctx):
 
     while(True):
         await nepbot.reply("How many evolutions does the Pokemon have remaining?")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         try:
@@ -163,7 +163,7 @@ async def capture(ctx):
 
     while(True):
         await nepbot.reply("Does the Pokemon have 5 or more injuries?")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         if msg.content.lower() in ['y', "yes"]:
@@ -177,7 +177,7 @@ async def capture(ctx):
             
     while(True):
         await nepbot.reply("Is the Pokemon suffering from at least one Persistant or Volatile Status Affliction?")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         if msg.content.lower() in ['y', "yes"]:
@@ -191,7 +191,7 @@ async def capture(ctx):
 
     while(True):
         await nepbot.reply("Did you crit the Accuracy Check?")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         if msg.content.lower() in ['y', "yes"]:
@@ -205,7 +205,7 @@ async def capture(ctx):
 
     while(True):
         await nepbot.reply("Enter any other Bonuses as a positive number")
-        msg = await nepbot.wait_for_message(author=message.author)
+        msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
         if msg.content.lower() in ["s", "same"]:
             break
         try:

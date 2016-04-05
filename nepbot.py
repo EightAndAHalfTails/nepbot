@@ -142,8 +142,8 @@ async def capture(ctx):
         if msg.content.lower() in ["s", "same"]:
             break
         try:
-            res = int(msg.content)-1
-            assert res in [0,1,2]
+            res = -int(msg.content)-1
+            assert res in [0,-1,-2]
             params["hp"] = 2*res
             break
         except:

@@ -63,6 +63,11 @@ async def accept(invite_url:str):
     except:
         await nepbot.reply("It didn't work...")
 
+@nepbot.command(pass_context=True, help="leaves a server.")
+async def leave(ctx):
+    await nepbot.say("Goodbye!")
+    await nepbot.leave_server(ctx.message.server)
+
 @nepbot.command(pass_context=True, help="Picks one of the users in a given Role")
 async def delegate(ctx, *role:str):
     role = " ".join(role).lower()
@@ -97,7 +102,7 @@ async def _capt(**kwargs):
     if success:
         await nepbot.reply("Gotcha! The Wild Pokemon was caught! `({})`".format(res))
     else:
-        await nepbot.reply("{}! The Pokemon broke free...".format(_getExplicitive().capitalize()))
+        await nepbot.reply("{}! The Pokemon broke free... ({})".format(_getExplicitive().capitalize(), res))
         
 @nepbot.command(pass_context=True, help="Try to capture a Pokemon in PTU")
 async def capture(ctx):
@@ -142,7 +147,7 @@ async def capture(ctx):
         if msg.content.lower() in ["s", "same"]:
             break
         try:
-            res = -int(msg.content)-1
+            res = -(int(msg.content)-1)
             assert res in [0,-1,-2]
             params["hp"] = 2*res
             break
@@ -156,7 +161,7 @@ async def capture(ctx):
             break
         try:
             assert int(msg.content) in [0,1,2]
-            params["evol"] = [0,2,6][int(msg.content)]
+            params["evol"] = [0,-2,-6][int(msg.content)]
             break
         except:
             await nepbot.reply(_getError())
@@ -167,7 +172,7 @@ async def capture(ctx):
         if msg.content.lower() in ["s", "same"]:
             break
         if msg.content.lower() in ['y', "yes"]:
-            params["inj"] = 4
+            params["inj"] = -4
             break
         elif msg.content.lower() in ['n', "no"]:
             params["inj"] = 0
@@ -228,19 +233,21 @@ async def scry():
 
 @nepbot.command(help="Posts an xkcd comic and hovertext")
 async def xkcd(number:str=""):
+    url = 'http://xkcd.com/{}'.format(number)
     try:
-        page = requests.get('http://xkcd.com/{}'.format(number))
+        page = requests.get(url)
         tree = html.fromstring(page.content)
         
         comic = tree.xpath('//div[@id="comic"]/img/attribute::src')[0]
         hover = tree.xpath('//div[@id="comic"]/img/attribute::title')[0]
         comic = requests.get("http:{}".format(comic)).content
         
-        await nepbot.upload(io.BytesIO(comic), "xkcd-{}.png".format(number))
+        await nepbot.upload(io.BytesIO(comic), filename="xkcd-{}.png".format(number))
         await nepbot.say("_{}_".format(hover))
+
     except Exception as e:
         print(e)
-        await nepbot.say("I failed...")
+        await nepbot.say(url)
 
 @nepbot.command(help="Says something in a voice channel")
 async def speak(server:str, channel:str, *message:str):

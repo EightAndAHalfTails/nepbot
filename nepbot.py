@@ -26,7 +26,7 @@ async def on_ready():
     print('------')
 
 def _getError():
-    return choice([ "What?", "Wait, what?", "I don't get it...", "Huh?", "I don't understand...", "Could you repeat that?", "What's that supposed to mean?", "That can't be right...", "Uhhh, what?", "Did you mess up or something?", "Sorry, what?" ])
+    return choice(["What?", "Wait, what?", "I don't get it...", "Huh?", "I don't understand...", "Could you repeat that?", "What's that supposed to mean?", "That can't be right...", "Uhhh, what?", "Did you mess up or something?", "Sorry, what?" ])
 
 def _getExplicitive():
     return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way", "balls" ])
@@ -84,7 +84,7 @@ last_params = {}
 async def _capt(**kwargs):
     for key in kwargs:
         last_params[key] = kwargs[key]
-        
+
     cr = 10 + sum(last_params.values())
     await nepbot.reply("The Capture Rate is `{}`!".format(cr))
     res = diceroll(20).result
@@ -103,7 +103,7 @@ async def _capt(**kwargs):
         await nepbot.reply("Gotcha! The Wild Pokemon was caught! `({})`".format(res))
     else:
         await nepbot.reply("{}! The Pokemon broke free... ({})".format(_getExplicitive().capitalize(), res))
-        
+
 @nepbot.command(pass_context=True, help="Try to capture a Pokemon in PTU")
 async def capture(ctx):
     message = ctx.message
@@ -179,7 +179,7 @@ async def capture(ctx):
             break
         else:
             await nepbot.reply(_getError())
-            
+
     while(True):
         await nepbot.reply("Is the Pokemon suffering from at least one Persistant or Volatile Status Affliction?")
         msg = await nepbot.wait_for_message(author=message.author, channel=message.channel)
@@ -219,8 +219,7 @@ async def capture(ctx):
         except:
             await nepbot.reply(_getError())
     await _capt(**params)
-    
-        
+
 @nepbot.command(help="Offers a glimpse into the Hyperdimension...")
 async def scry():
     try:
@@ -237,11 +236,11 @@ async def xkcd(number:str=""):
     try:
         page = requests.get(url)
         tree = html.fromstring(page.content)
-        
+
         comic = tree.xpath('//div[@id="comic"]/img/attribute::src')[0]
         hover = tree.xpath('//div[@id="comic"]/img/attribute::title')[0]
         comic = requests.get("http:{}".format(comic)).content
-        
+
         await nepbot.upload(io.BytesIO(comic), filename="xkcd-{}.png".format(number))
         await nepbot.say("_{}_".format(hover))
 

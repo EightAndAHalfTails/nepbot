@@ -12,43 +12,13 @@ class Card:
         self.draw = draw
         self.play = play
 
-BLACK_DECK = tuple(map(Card, """Daddy, why is mummy crying?
-__________. That's why mums go to Iceland.
-I'm sorry, sir, but I couldn't complete my homework because of __________.
-The TFL apologizes for the delay in train service due to ________.
-When I am Prime Minister of the United Kingdom, I will create the Ministry of _______.""".split('\n')))
+BLACK_DECK = None
+with open("cah_decks/uk_black.txt") as f:
+    BLACK_DECK = tuple(map(Card, f.readlines()))
 
-with open("black_deck", mode='w+b') as f:
-    pickle.dump(BLACK_DECK, f)
-
-WHITE_DECK = tuple(map(Card, """Germans on holiday.
-The unstoppable tide of Islam.
-A thousand Scottish warriors lifing their kilts in unison.
-Druids.
-A white van man.
-A vindaloo poo.
-Establishing dominance.
-Doing a shit in Pudsey Bear's eyehole.
-Blowing up Parliament
-Blood, Toil, Tears, and sweat.
-Anything that comes out of Prince Philip's mouth.
-An argument with Richard Dawkins.
-Cheating in the Paralympics.
-Gentleman's Relish.
-Buckfast Tonic Wine.
-Dogging.
-Wanking into a pool of Children's tears.
-Wiping her bum.
-A brain tumour.
-David Bowie flying in on a tiger made of lightning.
-The way James Bond treats women.
-Tories.
-Used knickers.
-Waking up half-naked in a Little Chef car park.
-A mad cow.""".split('\n')))
-
-with open("white_deck", mode='w+b') as f:
-    pickle.dump(WHITE_DECK, f)
+WHITE_DECK = None
+with open("cah_decks/uk_white.txt") as f:
+    WHITE_DECK = tuple(map(Card, f.readlines()))
 
 class Player:
     def __init__(self, **kwargs):
@@ -202,16 +172,3 @@ The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"]
         self.black_card = self.black_deck.pop()
         for player in self.players.values():
             player.deal(self.black_card.draw)
-
-if __name__ == "__main__":
-    g = Game(None)
-    g.add_player("Luke The Human")
-    g.add_player("EightAndAHalfTails")
-    g.reset()
-    print(g.status())
-    for p in g.players.values():
-        print(p.status())
-    for p in g.players.values():
-        p.play(0)
-    for p in g.players.values():
-        g.tsar.vote(p)

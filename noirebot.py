@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import cah
 from credentials import noire
+import os
 
 desc = "I-It's not like I want to play Cards Against Humanity with you or anything!"
 
@@ -16,9 +17,10 @@ async def on_ready():
     print(noirebot.user.id)
     print('------')
     for server in noirebot.servers:
-        if not server in games:
-            games[server] = cah.Game()
-        games[server] = games[server].load(server.name)
+        games[server] = cah.Game()
+        if os.path.isfile(server.name):
+            games[server] = games[server].load(server.name)
+    print(games)
         
 @noirebot.event
 async def on_server_join(server):

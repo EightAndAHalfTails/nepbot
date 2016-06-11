@@ -6,7 +6,7 @@ from random import randint, choice
 from datetime import date
 import requests
 from lxml import html
-from credentials import email, passw, irclogdir
+from credentials import nep, irclogdir
 from gtts import gTTS
 from tempfile import TemporaryFile
 from time import sleep
@@ -281,4 +281,4 @@ async def speak(server:str, channel:str, *message:str):
             pass
         await voice.disconnect()
 
-nepbot.run(email, passw)
+nepbot.run(nep["email"], nep["passw"])

@@ -4,6 +4,7 @@ from enum import Enum
 from random import shuffle, choice
 from collections import Counter
 import pickle
+from copy import copy, deepcopy
 
 class Card:
     def __init__(self, text, draw=0, play=1):
@@ -49,10 +50,6 @@ A mad cow.""".split('\n')))
 with open("white_deck", mode='w+b') as f:
     pickle.dump(WHITE_DECK, f)
 
-class Deck(list):
-    def draw(self, n):
-        return [self.pop() for i in range(n)]
-
 class Player:
     def __init__(self, **kwargs):
         self.game = kwargs["game"]
@@ -70,7 +67,7 @@ class Player:
         return self.game.tsar is self
 
     def deal(self, n):
-        self.hand += self.game.white_deck.draw(n)
+        self.hand += [self.game.white_deck.pop() for i in range(n)]
 
     def refresh_hand(self):
         self.deal(self.game.rules["hand_size"] - len(self.hand))
@@ -117,24 +114,42 @@ class Player:
         self.game.declare_winner(player)
 
 class Game:
-    def __init__(self, bot):
+    def __init__(self):
         self.turn = 0
         self.phase = 0
         self.players = {}
         with open("white_deck", mode='rb') as f:
-            self.white_deck = Deck(pickle.load(f))
+            self.white_deck = list(pickle.load(f))
         with open("black_deck", mode='rb') as f:
-            self.black_deck = Deck(pickle.load(f))
+            self.black_deck = list(pickle.load(f))
         self.black_card = None
         self.tsar = None
-        self.bot = bot
         self.rules = { "hand_size" : 10 }
+        
+    def save(self, filename):
+        with open(filename, mode='w+b') as f:
+            pickle.dump(self, f)
+
+    def load(self, filename):
+        try:
+            with open(filename, mode='r+b') as f:
+                loaded = pickle.load(f)
+                return loaded
+        except FileNotFoundError:
+            pass
 
     def status(self):
+        if not self.tsar:
+            res =  "The game has not started yet. Please assign a Card Tsar to start.\n"
+            if self.players:
+                res += "Players:\n"
+                for p in self.players.values():
+                    res += p.name + '\n'
+            return res
         res = """It is the {1} phase of turn {0.turn}.
 {0.tsar.name} is the Card Tsar.
 The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"][self.phase])
-        for player in self.players:
+        for _, player in self.players.items():
             if self.tsar is player:
                 played_str = "Card Tsar"
             elif self.phase == 0:
@@ -150,30 +165,23 @@ The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"]
         self.phase = 0
         shuffle(self.white_deck)
         shuffle(self.black_deck)
-        for _, player in self.players:
+        for player in self.players.values():
             player.reset()
             player.refresh_hand()
-        self.choose_tsar()
         self.new_black_card()
 
     def add_player(self, player):
-        self.players[player] = Player(name=str(player.name), game=self))
+        self.players[player] = Player(name=str(player.name), game=self)
 
     def remove_player(self, player):
         del self.players[player]
 
-    def choose_tsar(self, player=None):
-        if player:
-            self.tsar = player
-            player.clear()
-        elif self.players:
-            self.tsar = choice(self.players)
-            self.tsar.clear()
-        else:
-            self.tsar = None
+    def choose_tsar(self, player):
+        self.tsar = player
+        player.clear()
 
     def check_for_round_end(self):
-        all_played = all([len(p.played) == self.black_card.play for _, p in self.players if not (p is self.tsar)])
+        all_played = all([len(p.played) == self.black_card.play for p in self.players.values() if not (p is self.tsar)])
         if not all_played:
             return
         self.phase = 1
@@ -185,14 +193,14 @@ The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"]
         self.choose_tsar(player)
         self.turn += 1
         self.phase = 0
-        for _, player in self.players:
+        for player in self.players.values():
             player.refresh_hand()
         self.new_black_card()
         print(self.status())
 
     def new_black_card(self):
         self.black_card = self.black_deck.pop()
-        for _, player in self.players:
+        for player in self.players.values():
             player.deal(self.black_card.draw)
 
 if __name__ == "__main__":
@@ -201,9 +209,9 @@ if __name__ == "__main__":
     g.add_player("EightAndAHalfTails")
     g.reset()
     print(g.status())
-    for _, p in g.players:
+    for p in g.players.values():
         print(p.status())
-    for _, p in g.players:
+    for p in g.players.values():
         p.play(0)
-    for _, p in g.players:
+    for p in g.players.values():
         g.tsar.vote(p)

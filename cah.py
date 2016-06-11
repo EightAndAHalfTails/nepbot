@@ -1,10 +1,8 @@
-#import discord
-#from discord.ext import commands
 from enum import Enum
 from random import shuffle, choice
-from collections import Counter
 import pickle
 from copy import copy, deepcopy
+import os
 
 class Card:
     def __init__(self, text, play=1, draw=0):
@@ -12,12 +10,15 @@ class Card:
         self.play = int(play)
         self.draw = int(draw)
 
+root = os.path.dirname(os.path.realpath(__file__))
+decks_dir = os.path.join(root, "./cah/decks")
+
 BLACK_DECK = None
-with open("cah/decks/uk_black.txt") as f:
+with open(os.path.join(decks_dir, "uk_black.txt")) as f:
     BLACK_DECK = tuple([Card(*line.strip('\n').split('|')) for line in f])
 
 WHITE_DECK = None
-with open("cah/decks/uk_white.txt") as f:
+with open(os.path.join(decks_dir, "uk_white.txt")) as f:
     WHITE_DECK = tuple([Card(*line.strip('\n').split('|')) for line in f])
 
 class Player:

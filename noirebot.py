@@ -9,7 +9,8 @@ desc = "I-It's not like I want to play Cards Against Humanity with you or anythi
 noirebot = commands.Bot(command_prefix=commands.when_mentioned, description=desc)
 
 games = {}
-save_path = "./cah/states/"
+root = os.path.dirname(os.path.realpath(__file__))
+save_path = os.path.join(root, "./cah/states")
 
 @noirebot.event
 async def on_ready():
@@ -19,7 +20,7 @@ async def on_ready():
     print('------')
     for server in noirebot.servers:
         games[server] = cah.Game()
-        filename = save_path + server.name
+        filename = os.path.join(save_path, server.name)
         if os.path.isfile(filename):
             games[server] = games[server].load(filename)
         
@@ -35,7 +36,7 @@ async def on_server_remove(server):
 async def on_message(message):
     if message.server in games:
         if games[message.server]:
-            filename = save_path + message.server.name
+            filename = os.path.join(save_path, message.server.name)
             games[message.server].save(filename)
     await noirebot.process_commands(message)
 

@@ -22,7 +22,6 @@ async def on_ready():
         filename = save_path + server.name
         if os.path.isfile(filename):
             games[server] = games[server].load(filename)
-    print(games)
         
 @noirebot.event
 async def on_server_join(server):

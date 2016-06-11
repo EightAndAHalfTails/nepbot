@@ -7,18 +7,18 @@ import pickle
 from copy import copy, deepcopy
 
 class Card:
-    def __init__(self, text, draw=0, play=1):
+    def __init__(self, text, play=1, draw=0):
         self.text = text
-        self.draw = draw
-        self.play = play
+        self.play = int(play)
+        self.draw = int(draw)
 
 BLACK_DECK = None
-with open("cah_decks/uk_black.txt") as f:
-    BLACK_DECK = tuple(map(Card, f.readlines()))
+with open("cah/decks/uk_black.txt") as f:
+    BLACK_DECK = tuple([Card(*line.strip('\n').split('|')) for line in f])
 
 WHITE_DECK = None
-with open("cah_decks/uk_white.txt") as f:
-    WHITE_DECK = tuple(map(Card, f.readlines()))
+with open("cah/decks/uk_white.txt") as f:
+    WHITE_DECK = tuple([Card(*line.strip('\n').split('|')) for line in f])
 
 class Player:
     def __init__(self, **kwargs):
@@ -62,7 +62,6 @@ class Player:
             print("Not a valid card.")
             return
         self.played.append(self.hand.pop(n))
-        self.game.check_for_round_end()
 
     def clear(self):
         if not self.played:
@@ -75,26 +74,24 @@ class Player:
         if not self.is_tsar():
             print("Only the Card Tsar can vote.")
             return
-        if self.game.phase == 0:
-            print("You can only vote in the voting phase")
+        if not self.game.all_played():
+            print("Hold on, not everyone has played yet!")
             return
         if player is self:
-            print("You cannot vote for yourself.")
+            print("You can't vote for yourself!")
             return
         self.game.declare_winner(player)
 
 class Game:
     def __init__(self):
         self.turn = 0
-        self.phase = 0
         self.players = {}
-        with open("white_deck", mode='rb') as f:
-            self.white_deck = list(pickle.load(f))
-        with open("black_deck", mode='rb') as f:
-            self.black_deck = list(pickle.load(f))
+        self.white_deck = list(WHITE_DECK)
+        self.black_deck = list(BLACK_DECK)
         self.black_card = None
         self.tsar = None
         self.rules = { "hand_size" : 10 }
+        self.reset()
         
     def save(self, filename):
         with open(filename, mode='w+b') as f:
@@ -116,13 +113,13 @@ class Game:
                 for p in self.players.values():
                     res += p.name + '\n'
             return res
-        res = """It is the {1} phase of turn {0.turn}.
+        res = """Turn {0.turn}.
 {0.tsar.name} is the Card Tsar.
-The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"][self.phase])
+The Black Card is: '{0.black_card.text}'\n""".format(self)
         for _, player in self.players.items():
             if self.tsar is player:
                 played_str = "Card Tsar"
-            elif self.phase == 0:
+            elif not self.all_played():
                 pending = self.black_card.play - len(player.played)
                 played_str = "Waiting for {} card{}".format(pending, '' if pending==1 else 's')
             else:
@@ -132,8 +129,9 @@ The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"]
 
     def reset(self):
         self.turn = 0
-        self.phase = 0
+        self.white_deck = list(WHITE_DECK)
         shuffle(self.white_deck)
+        self.black_deck = list(BLACK_DECK)
         shuffle(self.black_deck)
         for player in self.players.values():
             player.reset()
@@ -142,6 +140,7 @@ The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"]
 
     def add_player(self, player):
         self.players[player] = Player(name=str(player.name), game=self)
+        self.players[player].refresh_hand()
 
     def remove_player(self, player):
         del self.players[player]
@@ -150,23 +149,17 @@ The Black Card is: '{0.black_card.text}'\n""".format(self, ["playing", "voting"]
         self.tsar = player
         player.clear()
 
-    def check_for_round_end(self):
-        all_played = all([len(p.played) == self.black_card.play for p in self.players.values() if not (p is self.tsar)])
-        if not all_played:
-            return
-        self.phase = 1
-        print(self.status())
+    def all_played(self):
+        return all([len(p.played) == self.black_card.play for p in self.players.values() if not (p is self.tsar)])
 
-    def declare_winner(self, player):
-        print("{.name} is declared the winner!".format(player))
-        player.score += 1
-        self.choose_tsar(player)
+    def declare_winner(self, winner):
+        winner.score += 1
         self.turn += 1
-        self.phase = 0
         for player in self.players.values():
             player.refresh_hand()
+            player.played = []
         self.new_black_card()
-        print(self.status())
+        self.choose_tsar(winner)
 
     def new_black_card(self):
         self.black_card = self.black_deck.pop()

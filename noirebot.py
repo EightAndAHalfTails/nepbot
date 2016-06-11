@@ -9,6 +9,7 @@ desc = "I-It's not like I want to play Cards Against Humanity with you or anythi
 noirebot = commands.Bot(command_prefix=commands.when_mentioned, description=desc)
 
 games = {}
+save_path = "./cah/states/"
 
 @noirebot.event
 async def on_ready():
@@ -18,8 +19,9 @@ async def on_ready():
     print('------')
     for server in noirebot.servers:
         games[server] = cah.Game()
-        if os.path.isfile(server.name):
-            games[server] = games[server].load(server.name)
+        filename = save_path + server.name
+        if os.path.isfile(filename):
+            games[server] = games[server].load(filename)
     print(games)
         
 @noirebot.event
@@ -34,7 +36,8 @@ async def on_server_remove(server):
 async def on_message(message):
     if message.server in games:
         if games[message.server]:
-            games[message.server].save(message.server.name)
+            filename = save_path + message.server.name
+            games[message.server].save(filename)
     await noirebot.process_commands(message)
 
 def _getError():
@@ -90,6 +93,7 @@ async def play(ctx, n):
     except:
         pass
     games[ctx.message.server].players[ctx.message.author].play(num)
+    await noirebot.say("```{}```".format(games[ctx.message.server].status()))
 
 @noirebot.command(pass_context=True,help="Takes back the cards you have played so far.")
 async def clear(ctx):
@@ -101,10 +105,12 @@ async def vote(ctx, name):
         if member != noirebot.user:
             if member in games[ctx.message.server].players:
                 games[ctx.message.server].players[ctx.message.author].vote(games[ctx.message.server].players[member])
+                await noirebot.say("Congratulations, {0.mention}!".format(member))
+                await noirebot.say("```{}```".format(games[ctx.message.server].status()))
                 return
             else:
-                noirebot.reply("That person isn't playing.")
-    noirebot.reply("I don't know that person.")
+                await noirebot.reply("That person isn't playing.")
+    await noirebot.reply("I don't know that person.")
 
 @noirebot.command(pass_context=True,help="Assigns a player to be Card Tsar.")
 async def appoint(ctx, name):
@@ -112,9 +118,10 @@ async def appoint(ctx, name):
         if member != noirebot.user:
             if member in games[ctx.message.server].players:
                 games[ctx.message.server].choose_tsar(games[ctx.message.server].players[member])
+                await noirebot.say("{0.mention} is the Card Tsar.".format(member))
                 return
             else:
-                noirebot.reply("That person isn't playing.")
-    noirebot.reply("I don't know that person.")
+                await noirebot.reply("That person isn't playing.")
+    await noirebot.reply("I don't know that person.")
 
 noirebot.run(noire["email"], noire["passw"])

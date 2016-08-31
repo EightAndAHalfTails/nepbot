@@ -31,7 +31,7 @@ def _getError():
 def _getExplicitive():
     return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way", "balls" ])
 
-@nepbot.command(description="Rolls dice given in NdN+N format.", brief="Rolls dice.")
+@nepbot.command(description="Rolls dice given in NdN+N format.", brief="Rolls dice.", aliases=["r"])
 async def roll(*cmd : str):
     cmd = "".join(cmd)
     try:
@@ -42,6 +42,25 @@ async def roll(*cmd : str):
             await nepbot.reply(str(e))
         else:
             await nepbot.reply(_getError().lower())
+
+@nepbot.command(description="Rolls dice with OVA rules. Provide the modifier as an argument.", brief="Rolls dice in the OVA system.", aliases=["or"])
+async def ovaroll(modifier : int):
+    try:
+        if modifier >= 0:
+            rolls = [ diceroll(6).result for i in range(2+modifier) ]
+            results = [ sum([ x for x in rolls if x == i]) for i in [1,2,3,4,5,6] ]
+            rollstr = str(sorted(rolls))
+            res = max(results)
+        else:
+            rolls = [ diceroll(6).result for i in range(abs(modifier)) ]
+            rollstr = str(sorted(rolls))
+            res = min(rolls)
+        await nepbot.reply("```{} ({})```".format(res, rollstr))
+    except Exception as e:
+        if str(e) is not "":
+            await nepbot.reply(str(e))
+        else:
+            await nepbot.reply(_getError().lower())        
 
 @nepbot.command(aliases=["pick"], description="Picks the <adj> out of [choices] (comma-separated)", brief="Let the hand of Nep decide...")
 async def choose(adj:str, *choices:str):

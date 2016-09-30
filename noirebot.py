@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import cah
-from credentials import noire
+from credentials import tokens
 import os
 
 desc = "I-It's not like I want to play Cards Against Humanity with you or anything!"
@@ -124,4 +124,4 @@ async def appoint(ctx, name):
                 await noirebot.reply("That person isn't playing.")
     await noirebot.reply("I don't know that person.")
 
-noirebot.run(noire["email"], noire["passw"])
+noirebot.run(tokens["noire"])

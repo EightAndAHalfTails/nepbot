@@ -29,7 +29,7 @@ def _getError():
     return choice(["What?", "Wait, what?", "I don't get it...", "Huh?", "I don't understand...", "Could you repeat that?", "What's that supposed to mean?", "That can't be right...", "Uhhh, what?", "Did you mess up or something?", "Sorry, what?" ])
 
 def _getExplicitive():
-    return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way", "balls" ])
+    return choice(["goodness", "fuck", "oh, no", "oh, dear", "oh my god", "neppu", "shit", "wtf", "bullshit", "damn", "dammit", "goddammit", "crap", "darn", "oh, darn", "oh", "omg", "no way", "balls", "bollocks" ])
 
 @nepbot.command(description="Rolls dice given in NdN+N format.", brief="Rolls dice.", aliases=["r"])
 async def roll(*cmd : str):

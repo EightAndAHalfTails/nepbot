@@ -6,7 +6,7 @@ from random import randint, choice
 from datetime import date
 import requests
 from lxml import html
-from credentials import tokens, irclogdir
+from credentials import tokens, ids, irclogdir
 from gtts import gTTS
 from tempfile import TemporaryFile
 from time import sleep
@@ -74,18 +74,14 @@ async def choose(adj:str, *choices:str):
     except:
         await nepbot.reply("I can't decide!")
 
-@nepbot.command(aliases=["join"], help="Accepts an invite to a Discord server.")
-async def accept(invite_url:str):
-    try:
-        await nepbot.accept_invite(invite_url)
-        await nepbot.reply("Thanks!")
-    except:
-        await nepbot.reply("It didn't work...")
+@nepbot.command(aliases=["join"], help="Generates a URL to allow me onto a server that you manage")
+async def invite():
+    await nepbot.reply("https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=536870911".format(ids["nep"]))
 
-@nepbot.command(pass_context=True, help="leaves a server.")
-async def leave(ctx):
-    await nepbot.say("Goodbye!")
-    await nepbot.leave_server(ctx.message.server)
+#@nepbot.command(pass_context=True, help="leaves a server.")
+#async def leave(ctx):
+#    await nepbot.say("Goodbye!")
+#    await nepbot.leave_server(ctx.message.server)
 
 @nepbot.command(pass_context=True, help="Picks one of the users in a given Role")
 async def delegate(ctx, *role:str):
